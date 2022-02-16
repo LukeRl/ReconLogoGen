@@ -1,0 +1,26 @@
+.logoExample {
+    display: flex;
+    flex-flow: row nowrap;
+    -ms-align-items: center;
+    align-items: center;
+    height: 150px;
+}
+.logoExample .logo {
+    flex-shrink: 0;
+    height: 100%;
+}
+.logoExample .logoText {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    padding: 70px 10px 30px 2px;
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-size: 0;
+}
+
+body > svg.logo {
+    width: calc(100vmin - 175px);
+}
