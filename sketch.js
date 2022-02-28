@@ -17,6 +17,8 @@ function updateAll() {
     logos[0].drawPath()
     for (const l of logos) {
         l.path.setAttribute("d", logos[0].path.getAttribute("d"))
+        l.path.setAttribute("transform", logos[0].path.getAttribute("transform"))
+
     }
 }
 

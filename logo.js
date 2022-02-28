@@ -105,18 +105,91 @@ class AnimatedLogo {
             pathArray.push([a.r, ...tangent(a, b)])
         }
 
+
+
+        let k = 0 //dont judge, cbf changing loop for an iterator
         let path = `M${pathArray.at(-1).at(-1)} `
+        let pathOld = `M${pathArray.at(-1).at(-1)} `
         for (const [r, a, b] of pathArray) {
-            path += `A${r} ${r} 0 0 ${r > 0 ? 1 : 0} ${a} S${b}`
+
+            pathOld += `A${r} ${r} 0 0 ${r > 0 ? 1 : 0} ${a} L${b}`
+
+
+            let sweep
+            if(k % 2 == 0){
+                sweep = 0
+            }else{
+                sweep = 1
+            }
+            let currPoint = a
+            let nextPoint = b
+            let prevPoint = []
+            if (k == 0){
+                prevPoint = pathArray.at(-1).at(-1)
+            }else{
+                prevPoint = pathArray[k-1][2]   // 'b' point from previous elemnet
+            }
+
+            let bezSegments = arcToBezier({
+                px: prevPoint.x,
+                py: prevPoint.y,
+                cx: currPoint.x,
+                cy: currPoint.y,
+                rx: r,
+                ry: r,
+                xAxisRotation: 0,
+                largeArcFlag: 0,
+                sweepFlag: r > 0 ? 1 : 0,
+            });
+
+            /// CANT CHANGE NUM OF CMDS IN PATH, add 4 beziers every time
+            let lastPoint = []
+            if (bezSegments.length==0){
+                lastPoint = [currPoint.x, currPoint.y]
+            }
+            for(let i=0; i<4; i++){
+
+                if (i<bezSegments.length){
+                    path += `C${bezSegments[i]['x1']} ${bezSegments[i]['y1']} ${bezSegments[i]['x2']} ${bezSegments[i]['y2']} ${bezSegments[i]['x']} ${bezSegments[i]['y']}`
+                    lastPoint = [bezSegments[i]['x'],bezSegments[i]['y']]
+                    this.path.setAttribute("d", path)
+                }else{
+                    path += `C${lastPoint[0]} ${lastPoint[1]} ${lastPoint[0]} ${lastPoint[1]} ${lastPoint[0]} ${lastPoint[1]}` // Should really adjust the arcToBezier to always break into 4 segs, but fuck that.
+                    this.path.setAttribute("d", path)
+                }
+            }
+
+            let nextLineMidPoint = midpoint(currPoint.x,currPoint.y,nextPoint.x,nextPoint.y)
+            let cntrlPoint1 = midpoint(currPoint.x,currPoint.y,nextLineMidPoint[0],nextLineMidPoint[1])
+            let cntrlPoint2 = midpoint(nextLineMidPoint[0],nextLineMidPoint[1],nextPoint.x,nextPoint.y)
+
+            //path += `L${nextPoint}`
+            path += `C${cntrlPoint1[0]} ${cntrlPoint1[1]} ${cntrlPoint2[0]} ${cntrlPoint2[1]} ${nextPoint.x} ${nextPoint.y}`
+            k++
+            this.path.setAttribute("d", path)
+
+            /// good enough for now. not using the tangents properly. its 5am. sleep time.
+
         }
         console.log(path)
+        console.log("===================================")
+        console.log(pathOld)
 
         this.path.setAttribute("d", path)
+
+        // Centering the lazy way. Could be improved by actually calcing path vertices*translation to keep it all in the 'd' attrib
+        let transformAtt = "translate(" +((CoM.x)*-1).toString() + "," + ((CoM.y)*-1).toString() + ")"
+        this.path.setAttribute("transform", transformAtt)
+        //this.path.setAttribute("stroke-linejoin", 'round')
     }
 }
 
 //Supporting math functions
 //TODO: rewrite and move into vector.js
+
+function midpoint(x1, y1, x2, y2) {
+    return [(x1 + x2) / 2, (y1 + y2) / 2];
+}
 
 function tangent(c1, c2) {
     if (c1.dist(c2) == 0) {return [c1, c2]}

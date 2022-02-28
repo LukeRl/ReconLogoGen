@@ -57,10 +57,37 @@ The current algorithm follows this process:
     - Set the value of the svg path to the generated path.
 
 Issues:
- - The generated shape does not reliably take up enough volume.
+ 1) The generated shape does not reliably take up enough volume.
     - Modify the random distribution of the positive anchors to favour covering more volume.
- - The generated shape strays from the centre of the logo area.
+ 2) The generated shape strays from the centre of the logo area.
     - Incorporate into the solution above OR translate the centre of mass to the centre of the image (and ensure no overflow) .
- - During the transition process sharp edges are created due to transitioning using `L` and `A` commands in the svg path.
+ 3) During the transition process sharp edges are created due to transitioning using `L` and `A` commands in the svg path.
     - replace all svg path commands with `C` (Bezier curves) to allow for smoother transitioning.
         - Straight lines can be represented by keeping the control points inline and the arcs can be mimicked closely (see https://spencermortensen.com/articles/bezier-circle/)
+   
+
+<font size="0.7" color="red">
+   LR:
+   
+   1) Initially I thought this could just be fixed by ensuring a minimum angle between the anchors that scales according to how clustered they are; if only two anchors next to eachother 
+      (i.e. within X degrees of eachother), then the minimum will be quite small to allow for those anchor points in close proximity, but if there are three or more within a given degree 
+      around the origin, then the minimum is scaled higher for each anchor (going clockwise since anchors are sorted during path generation). Buuuut, this resulted in MUCH less variation
+      to the point where it almost looked the like same logo rotated at a glance (if you take the time to check you can tell its new, but thats too much for randoms on the site). 
+      
+      I manually placed the anchors around and found that by jsut changiong the anchor positions the only way to get a higher avg area causes way too much reduction in the variation. Theres 
+      either a lot of variance in the area, or there are no cool/unique shapes with long/thin sections. Having some sort of balancing alg that will add more 'fat' sections if it finds itself
+      drawing enough 'thin' ones would be nice, but given I've only got a couple hours tongiht and you're busy too, ima just try and convince the guys that variation is more important and ur 
+      initial way of doing it is fine. If they disagree I'll take the hit and do that ^^ shit. 
+      
+   2) I just set the path's transform attrib to translate by -CoM. I tried adding a check after to move any anchors that would be translated out of bounds but I found that it looked worse than 
+      just letting it cut off. Proper solution would be to modify the path when translating and checking for out of bounds there rather than leaving the path as is and just 
+      translating it, since when checking for out of bounds we could do some fancy shit to ensure the 'triangles' (origin -> 2 anchors) arent broken. 
+      
+   3)
+   
+   
+   Side note: maybe the other way I did the generation and even a few new ways (e.g. pathfinding agents that walk randomly towards the center??) could still be chucked in and swapped between according to
+   some heuristic like time (e.g. in the mornings the logos will be from your anchor + radial deductions around orign, after 11, maybe we use another script, after 4 another etc. so that the users wont 
+   be able to obviously realise the diff but any freq users may notice trends from when they access the site.) or whatever.
+
+</font>
